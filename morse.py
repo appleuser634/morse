@@ -63,9 +63,9 @@ def main():
 def encode_binary(frame):
     global binary
      
-    if frame <= 5 and frame >= 1:
+    if frame <= 8 and frame >= 1:
         binary.append(".")
-    elif frame >= 6:
+    elif frame >= 9:
         binary.append("_")
 
 def encode_morse(code):
