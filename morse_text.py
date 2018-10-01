@@ -51,6 +51,9 @@ def main():
         try:
             frame_text = font.render("".join(binary).encode(), True, (255,255,255))
             screen.blit(frame_text, [170,200])
+            
+            if len(user_text) >= 10:
+                del user_text[0]
             text = font2.render("".join(user_text).encode(), True, (255,255,255))
             screen.blit(text, [100,50])
         except:
