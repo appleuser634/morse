@@ -2,9 +2,7 @@
 Powered by Python morse. 
 
 **You can Use** 
-''' 
 $ python3 morse.py 
-''' 
 and 
 press space key. 
 
