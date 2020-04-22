@@ -1,6 +1,11 @@
 import pygame
 from pygame.locals import *
 import sys
+import os
+import time
+import pickle
+import requests
+import random
 
 binary = []
 morse = ""
@@ -23,51 +28,88 @@ def main():
     screen = pygame.display.set_mode((400,300))
     pygame.display.set_caption("Morse!")
     font = pygame.font.Font(None, 100)
-        
+    font2 = pygame.font.Font(None, 50)
+    font3 = pygame.font.Font(None, 30)
+
+    if 'kp_save.pickle' in os.listdir():
+        with open('./kp_save.pickle','rb') as kp:
+            key_pitch = pickle.load(kp)
+    else:
+        key_pitch = 100
+    
+    random_words = get_words()
+
+    word_index = random.randint(0,len(random_words))
+    word = random_words[word_index].decode()
+
     while True:
         
         pressed_key = pygame.key.get_pressed()
+
+        if pressed_key[K_s]:
+            
+            key_pitch += 2
+            time.sleep(0.2)
+
+        elif pressed_key[K_f]:
+            
+            if key_pitch >= 5:
+            
+                key_pitch -= 2
+                time.sleep(0.2)
+        
+        elif pressed_key[K_n]:
+
+            word_index = random.randint(0,len(random_words))
+            word = random_words[word_index].decode()
+
 
         if pressed_key[K_SPACE]:
             if check == 0:
                 frame = 0
             frame += 1
             check = 1
-
+        
         else:
             if check == 1:
                 free_sec = 0
-                encode_binary(frame)
+                encode_binary(frame,key_pitch)
             check = 0
             free_sec += 1
 
-        if free_sec >= 70:
+        if free_sec >= key_pitch + 300:
             encode_morse(binary)
 
         screen.fill((0,0,0))
         text = font.render(morse.encode(), True, (255,255,255))
-        screen.blit(text, [170,100])
+        screen.blit(text, [170,150])
         try:
             frame_text = font.render("".join(binary).encode(), True, (255,255,255))
             screen.blit(frame_text, [170,200])
         except:
             pass
-             
+        
+        kp_stat = font3.render("KeyPith:" + str(key_pitch), True, (255,255,255))
+        screen.blit(kp_stat, [10,10])
+
+        kp_stat = font2.render(word, True, (255,255,255))
+        screen.blit(kp_stat, [10,50])
+
         pygame.display.update()
         
         for event in pygame.event.get():
             if event.type == QUIT:
-                end()
+                end(key_pitch)
             if event.type == KEYDOWN:  
                 if event.key == K_ESCAPE:
-                    end()
+                    end(key_pitch)
 
-def encode_binary(frame):
+def encode_binary(frame,key_pitch):
     global binary
      
-    if frame <= 8 and frame >= 1:
+    if frame <= key_pitch and frame >= 1:
         binary.append(".")
-    elif frame >= 9:
+    elif frame > key_pitch:
         binary.append("_")
 
 def encode_morse(code):
@@ -78,9 +120,28 @@ def encode_morse(code):
         pass
     binary = []
 
-def end():
+def get_words():
+    
+    if 'random_words.pickle' in os.listdir():
+        with open('./random_words.pickle', 'rb') as rw:
+            random_words = pickle.load(rw)
+    else:
+        word_site = "http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain"
+        response = requests.get(word_site)
+        random_words = response.content.splitlines()
+        
+        with open('./random_words.pickle', 'wb') as rw:
+            pickle.dump(random_words,rw)
+
+    return random_words
+
+def end(key_pitch):
     print(binary)
     print(morse)
+    
+    with open('./kp_save.pickle','wb') as kp:
+        pickle.dump(key_pitch,kp)
+
     pygame.quit()
     sys.exit()
 
