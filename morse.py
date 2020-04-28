@@ -15,14 +15,17 @@ morse_list = {"._":"A","_...":"B","_._.":"C","_..":"D",".":"E",".._.":"F",\
             "...":"S","_":"T",".._":"U","..._":"V",".__":"W","_.._":"X",\
             "_.__":"Y","__..":"Z",".____":"1","..___":"2","...__":"3",\
             "...._":"4",".....":"5","_....":"6","__...":"7","___..":"8",\
-            "____.":"9","_____":"0"}
+            "____.":"9","_____":"0","........":"del"}
+
+typed_words = ""
 
 frame = 0
 check = 0
 free_sec = 0
 
+
 def main():
-    global word,frame,check,free_sec
+    global word,frame,check,free_sec,typed_words
 
     pygame.init()
     screen = pygame.display.set_mode((400,300))
@@ -41,11 +44,15 @@ def main():
 
     word_index = random.randint(0,len(random_words))
     word = random_words[word_index].decode()
+    word = str.upper(word)
 
+    score = 0
+     
     while True:
         
         pressed_key = pygame.key.get_pressed()
-
+        
+        # SET Key Pith.
         if pressed_key[K_s]:
             
             key_pitch += 2
@@ -58,12 +65,16 @@ def main():
                 key_pitch -= 2
                 time.sleep(0.2)
         
+        # Get next Sample Words.
         elif pressed_key[K_n]:
+            
+            typed_words = ""
 
             word_index = random.randint(0,len(random_words))
             word = random_words[word_index].decode()
+            word = str.upper(word)
 
-
+        # Get Morse Code.
         if pressed_key[K_SPACE]:
             if check == 0:
                 frame = 0
@@ -80,29 +91,57 @@ def main():
         if free_sec >= key_pitch + 300:
             encode_morse(binary)
 
+
         screen.fill((0,0,0))
-        text = font.render(morse.encode(), True, (255,255,255))
+        
+        # Display Enterd Charctor.
+        text = font.render(morse, True, (255,255,255))
         screen.blit(text, [170,150])
+        
         try:
             frame_text = font.render("".join(binary).encode(), True, (255,255,255))
             screen.blit(frame_text, [170,200])
         except:
             pass
         
+        # Display Key Pith Speed.
         kp_stat = font3.render("KeyPith:" + str(key_pitch), True, (255,255,255))
         screen.blit(kp_stat, [10,10])
 
+        # Display Sample Words.
         kp_stat = font2.render(word, True, (255,255,255))
         screen.blit(kp_stat, [10,50])
 
-        pygame.display.update()
+        # Display Typed Words.
+        kp_stat = font2.render(typed_words, True, (255,255,255))
+        screen.blit(kp_stat, [10,80])
         
+        # Display Score.
+        kp_stat = font2.render("Score:" + str(score), True, (255,255,255))
+        screen.blit(kp_stat, [230,5])
+
+
+        pygame.display.update()
+
+        if typed_words == word:
+            
+            typed_words = ""
+
+            word_index = random.randint(0,len(random_words))
+            word = random_words[word_index].decode()
+            word = str.upper(word)
+            
+            score += 1
+
         for event in pygame.event.get():
             if event.type == QUIT:
                 end(key_pitch)
             if event.type == KEYDOWN:  
                 if event.key == K_ESCAPE:
                     end(key_pitch)
+            else:
+                pygame.mixer.music.stop()
+                pass
 
 def encode_binary(frame,key_pitch):
     global binary
@@ -113,9 +152,15 @@ def encode_binary(frame,key_pitch):
         binary.append("_")
 
 def encode_morse(code):
-    global morse,binary
+    global morse,binary,typed_words
     try:
         morse = morse_list["".join(code)]
+
+        if morse == "del":
+            typed_words = typed_words[:-1]
+        else:
+            typed_words += morse
+
     except KeyError:
         pass
     binary = []
@@ -132,8 +177,11 @@ def get_words():
         
         with open('./random_words.pickle', 'wb') as rw:
             pickle.dump(random_words,rw)
-
+    
     return random_words
+
+def check_morse():
+    pass
 
 def end(key_pitch):
     print(binary)
